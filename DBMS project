@@ -1,0 +1,108 @@
+#Supplier Table
+ CREATE TABLE suppliers (
+    supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(15),
+    email VARCHAR(100),
+    address VARCHAR(255)
+);
+
+#Medicine Table
+CREATE TABLE medicines (
+    medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    supplier_id INT,
+    price DECIMAL(10,2),
+    expiry_date DATE,
+    stock INT DEFAULT 0,
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+);
+
+#Purchase Table (Stock In)
+CREATE TABLE purchases (
+    purchase_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT,
+    quantity INT NOT NULL,
+    purchase_date DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id)
+);
+
+#Sales Table (Stock Out)
+CREATE TABLE sales (
+    sale_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT,
+    quantity INT NOT NULL,
+    sale_date DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id)
+);
+
+#Insert Suppliers
+INSERT INTO suppliers (supplier_name, phone, email, address) VALUES
+('Medico Pharma', '9876543210', 'medico@gmail.com', 'Hyderabad'),
+('LifeCare Distributors', '9123456780', 'lifecare@yahoo.com', 'Mumbai');
+#View All suppliers
+SELECT * FROM suppliers;
+
+#Insert Medicines
+INSERT INTO medicines 
+(medicine_name, category, supplier_id, price, expiry_date, stock) 
+VALUES
+('Paracetamol', 'Tablet', 1, 25.00, '2026-02-10', 100),
+('Amoxicillin', 'Capsule', 2, 45.00, '2025-09-01', 60),
+('Cough Syrup', 'Liquid', 1, 75.00, '2025-03-15', 30);
+#View All Medicines
+SELECT * FROM medicines;
+
+#Add Stock When New Purchase Occurs
+INSERT INTO purchases (medicine_id, quantity) VALUES (1, 50);
+UPDATE medicines
+SET stock = stock + 50
+WHERE medicine_id = 1;
+#View All Medicines
+SELECT * FROM medicines;
+#View All purchases
+SELECT * FROM purchases;
+
+#Reduce Stock When Sale Occurs
+INSERT INTO sales (medicine_id, quantity) VALUES (2, 5);
+UPDATE medicines
+SET stock = stock - 5
+WHERE medicine_id = 2;
+#View All Medicines
+SELECT * FROM medicines;
+#View All sales
+SELECT * FROM sales;
+
+#Low Stock Medicines (less than 20)
+SELECT medicine_name, stock 
+FROM medicines 
+WHERE stock < 20;
+
+ #Expired Medicines 
+SELECT medicine_name, expiry_date
+FROM medicines
+WHERE expiry_date < CURDATE();
+
+
+#Medicines Expiring Soon (next 30 days)
+SELECT medicine_name, expiry_date
+FROM medicines
+WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY);
+
+#Supplier Details With Medicines Supplied
+SELECT s.supplier_name, m.medicine_name, m.stock
+FROM suppliers s
+JOIN medicines m ON s.supplier_id = m.supplier_id;
+
+#Purchase History
+SELECT p.purchase_id, m.medicine_name, p.quantity, p.purchase_date
+FROM purchases p
+JOIN medicines m ON p.medicine_id = m.medicine_id
+ORDER BY p.purchase_date DESC;
+
+#Sales History
+SELECT s.sale_id, m.medicine_name, s.quantity, s.sale_date
+FROM sales s
+JOIN medicines m ON s.medicine_id = m.medicine_id
+ORDER BY s.sale_date DESC;
